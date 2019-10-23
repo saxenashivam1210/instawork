@@ -1,0 +1,13 @@
+{
+ "AWSEBDockerrunVersion" : "1",
+ "Image" : {
+  "Name" : "instawork/team:<version>"
+ },
+ "Authentication" : {
+  "Bucket" : "instawork-docker",
+  "Key" : "dockercreds/.dockercfg"
+ },
+ "Ports" : [
+  { "ContainerPort" : "80" }
+ ]
+}

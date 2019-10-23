@@ -12,7 +12,10 @@ class MemberService(APIView):
 
         if requested_uuid:
             member = Member.objects.filter(uuid=requested_uuid).first()
-            return Response(MemberSerializer(member).data)
+            if member:
+                return Response(MemberSerializer(member).data)
+            else:
+                return Response(status=404, data={"message": "Record with uuid {} does not exist".format(requested_uuid)})
 
         members = Member.objects.all()
         return Response(MemberSerializer(members, many=True).data)
@@ -38,7 +41,7 @@ class MemberService(APIView):
     def delete(request):
         requested_uuid = request.GET.get('uuid')
         deleted = Member.objects.filter(uuid=requested_uuid).delete()
-        if deleted[0] == 1:
+        if deleted and deleted[0] == 1:
             return Response(status=200, data={"message": "Record deleted"})
         else:
             return Response(status=404, data={"message": "Record with uuid {} does not exist".format(requested_uuid)})

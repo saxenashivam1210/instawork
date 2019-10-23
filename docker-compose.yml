@@ -1,6 +1,18 @@
 version: '2'
 services:
+  server:
+    image: instawork
+    build:
+      context: .
+      dockerfile: Dockerfile-prod
+    env_file: .env
+    links:
+      - postgres
+    depends_on:
+      - postgres
+    ports:
+     - "80:80"
   postgres:
     image: postgres:10
     ports:
-      - 5432
+      - "5432:5432"

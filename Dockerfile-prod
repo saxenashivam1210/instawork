@@ -1,0 +1,63 @@
+FROM ubuntu:16.04
+
+## for apt to be noninteractive
+ENV DEBIAN_FRONTEND noninteractive
+ENV DEBCONF_NONINTERACTIVE_SEEN true
+
+## preesed tzdata, update package index, upgrade packages and install needed software
+RUN apt-get clean
+RUN apt-get update
+RUN apt-get install -y build-essential 
+RUN apt-get install -y git
+RUN apt-get install -y apache2
+RUN apt-get install -y curl apt-transport-https
+RUN apt-get update
+RUN apt-get upgrade -y
+
+## Setting up logentries
+RUN echo 'deb http://rep.logentries.com/ xenial main' > /etc/apt/sources.list.d/logentries.list
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys A5270289C43C79AD || apt-key adv --keyserver hkp://pgp.mit.com:80 --recv-keys A5270289C43C79AD
+RUN apt-get update 
+RUN apt-get install -y logentries logentries-daemon
+RUN mkdir -p /etc/le
+
+RUN apt-get install -y python-dev
+RUN apt-get install -y python-pip
+RUN apt-get update
+RUN apt-get install -y apache2-dev
+RUN pip install mod_wsgi
+RUN apt-get install -y libapache2-mod-wsgi
+
+# to install psycopg2
+RUN apt-get install -y libpq-dev
+
+## moving all files to /usr/src/app
+RUN mkdir -p /usr/src/app
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install mod_wsgi
+
+# speedup reinstallation of requirements.txt by moving it outside project
+RUN pip install -r /tmp/requirements.txt
+
+COPY . /usr/src/app
+COPY wsgi.conf /etc/apache2/conf-available
+WORKDIR /usr/src/app
+
+## changing permissions for app files so that apache wsgi can access it
+RUN chmod -R 777 /usr/src/app
+
+## Apache wsgi related changes
+RUN echo 'WSGIApplicationGroup %{GLOBAL}' >> /etc/apache2/apache2.conf
+RUN sed -i -e 's/LogLevel warn/LogLevel info/g' /etc/apache2/apache2.conf
+RUN a2enmod wsgi
+RUN a2enconf wsgi
+RUN echo ". /etc/environment" >> /etc/apache2/envvars
+RUN bash setup.sh
+
+EXPOSE 80
+
+#for development server without using apache wsgi
+#CMD python manage.py migrate && echo "migration complete, running server now!!" && python manage.py runserver
+
+# for production server
+CMD python manage.py migrate && echo "migration complete, running server now!!" && rm -rf /etc/le/token && echo $LOGENTRIES_TOKEN >> /etc/le/token && bash logentries_setup.sh && bash env_setup.sh && service apache2 restart && tail -f /var/log/apache2/access.log
