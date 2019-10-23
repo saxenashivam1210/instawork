@@ -12,17 +12,32 @@ class MemberService(APIView):
         requested_uuid = request.GET.get('uuid')
 
         if requested_uuid:
-            member = Member.objects.all().filter(uuid=requested_uuid)
-            return Response(MemberSerializer(member, many=True).data)
+            member = Member.objects.filter(uuid=requested_uuid).first()
+            return Response(MemberSerializer(member).data)
 
         members = Member.objects.all()
         return Response(MemberSerializer(members, many=True).data)
 
     def post(self, request):
         serializer = MemberSerializer(data=json.loads(request.body))
-        print serializer.initial_data
         serializer.is_valid()
-        print serializer.validated_data
         member = serializer.save()
-        created_member = Member.objects.all().filter(uuid=member.uuid)
-        return Response(MemberSerializer(created_member, many=True).data)
+        return Response(MemberSerializer(member).data)
+
+    def put(self, request):
+        data = json.loads(request.body)
+        uuid = data['uuid']
+        existing_member = Member.objects.filter(uuid=uuid).first()
+        serializer = MemberSerializer(existing_member, data=data)
+        serializer.is_valid()
+        member = serializer.save()
+        return Response(MemberSerializer(member).data)
+
+    def patch(self, request):
+        data = json.loads(request.body)
+        uuid = data['uuid']
+        existing_member = Member.objects.filter(uuid=uuid).first()
+        serializer = MemberSerializer(existing_member, data=data)
+        serializer.is_valid()
+        member = serializer.save()
+        return Response(MemberSerializer(member).data)

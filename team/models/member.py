@@ -12,7 +12,7 @@ class Member(models.Model):
     class Meta:
         db_table = 'member'
 
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=True, unique=True, primary_key=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     phone_number = models.IntegerField()
