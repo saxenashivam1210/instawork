@@ -1,5 +1,5 @@
 Django==1.11.25
-djangorestframework==3.9.4
+djangorestframework==3.11.2
 honcho==1.0.1
 psycopg2==2.8.4
 pytz==2019.3
